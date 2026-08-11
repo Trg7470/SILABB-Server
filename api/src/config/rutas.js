@@ -2,20 +2,18 @@ const path = require("path");
 
 const RUTAS = {
 
-    // Plantillas Word
-    plantillas: path.join(__dirname, "../recursos/plantillas_docx"),
-
-    // Documentos Word temporales
+     // Documentos Word temporales
     temporalesDocx: path.join(__dirname, "../../storage/temporales/docx"),
 
     // Documentos PDF temporales
     temporalesPdf: path.join(__dirname, "../../storage/temporales/pdf"),
 
-    // Recursos generales
+    //Recursos generales
     recursos: path.join(__dirname, "../recursos"),
 
-    // Fotos
-    fotos: path.join(__dirname, "../recursos/fotos")
+    //plantilla constancia liberacion
+    plantilla_constancia: path.join(__dirname, "../recursos/plantilla_constancia"),
+
 };
 
 module.exports = RUTAS;
