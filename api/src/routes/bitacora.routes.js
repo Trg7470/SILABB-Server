@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const BitacoraController = require('../controllers/bitacora.controller');
-const { verificarToken } = require('../middleware/jwt.middleware');
+const { verificarToken } = require('../middleware/auth.middleware');
 
 router.get(
     '/',
