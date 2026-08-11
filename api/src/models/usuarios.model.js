@@ -1,172 +1,254 @@
 const { mysqlPool } = require('../config/mysql');
+class UsuariosModel {
+    static async listar() {
+        const [resultado] = await mysqlPool.query(`
+        SELECT
+            u.Id_Usuario,
+            u.Nombre,
+            u.Apellido_Paterno,
+            u.Apellido_Materno,
+            u.Usuario,
+            u.Id_Rol,
+            r.Nombre AS Rol,
+            u.Activo
+        FROM Usuarios u
+        INNER JOIN Roles r
+            ON r.Id_Rol = u.Id_Rol
+        ORDER BY u.Id_Usuario ASC
+    `);
 
-class Usuarios {
-    static async all() {
-        const [rows] = await mysqlPool.query(`
-            SELECT
-                u.Id_Usuario,
-                u.Nombre,
-                u.Apellido_Paterno,
-                u.Apellido_Materno,
-                u.Usuario,
-                u.Id_Rol,
-                r.Nombre AS Rol,
-                u.Activo
-            FROM Usuarios u
-            INNER JOIN Roles r
-                ON r.Id_Rol = u.Id_Rol
-            ORDER BY u.Id_Usuario ASC
-        `);
-        return rows;
+        return resultado;
     }
 
-    static async userById(id) {
-        const [rows] = await mysqlPool.query(`
-            SELECT
-                u.Id_Usuario,
-                u.Nombre,
-                u.Apellido_Paterno,
-                u.Apellido_Materno,
-                u.Usuario,
-                u.Id_Rol,
-                r.Nombre AS Rol,
-                u.Activo
-            FROM Usuarios u
-            INNER JOIN Roles r
-                ON r.Id_Rol = u.Id_Rol
-            WHERE u.Id_Usuario = ?
-        `, [id]);
-        return rows;
+    static async obtenerPorId(idUsuario) {
+        const [resultado] = await mysqlPool.query(`
+        SELECT
+            u.Id_Usuario,
+            u.Nombre,
+            u.Apellido_Paterno,
+            u.Apellido_Materno,
+            u.Usuario,
+            u.Id_Rol,
+            r.Nombre AS Rol,
+            u.Activo
+        FROM Usuarios u
+        INNER JOIN Roles r
+            ON r.Id_Rol = u.Id_Rol
+        WHERE u.Id_Usuario = ?
+    `, [idUsuario]);
+
+        return resultado[0];
     }
 
-    static async createUser(data) {
-        const {
+    static async crear(
+        nombre,
+        apellidoPaterno,
+        apellidoMaterno,
+        usuario,
+        password,
+        idRol
+    ) {
+        const [resultado] = await mysqlPool.query(`
+        INSERT INTO Usuarios (
             Nombre,
             Apellido_Paterno,
             Apellido_Materno,
             Usuario,
             Password,
             Id_Rol
-        } = data;
-        const [result] = await mysqlPool.query(`
-            INSERT INTO Usuarios (
-                Nombre,
-                Apellido_Paterno,
-                Apellido_Materno,
-                Usuario,
-                Password,
-                Id_Rol
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        `, [
-            Nombre,
-            Apellido_Paterno,
-            Apellido_Materno,
-            Usuario,
-            Password,
-            Id_Rol
-        ]);
-        return result;
-    }
-
-    static async updateUser(id, data) {
-        const {
-            Nombre,
-            Apellido_Paterno,
-            Apellido_Materno,
-            Usuario,
-            Id_Rol,
-            Activo
-        } = data;
-
-        const [result] = await mysqlPool.query(`
-            UPDATE Usuarios
-            SET
-                Nombre = ?,
-                Apellido_Paterno = ?,
-                Apellido_Materno = ?,
-                Usuario = ?,
-                Id_Rol = ?,
-                Activo = ?
-            WHERE Id_Usuario = ?
-        `, [
-            Nombre,
-            Apellido_Paterno,
-            Apellido_Materno,
-            Usuario,
-            Id_Rol,
-            Activo,
-            id
-        ]);
-
-        return result;
-    }
-
-    static async updatePassword(id, password) {
-        const [result] = await mysqlPool.query(`
-            UPDATE Usuarios
-            SET Password = ?
-            WHERE Id_Usuario = ?
-        `, [
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    `, [
+            nombre,
+            apellidoPaterno,
+            apellidoMaterno,
+            usuario,
             password,
-            id
+            idRol
         ]);
 
-        return result;
+        return resultado.insertId;
     }
 
-    static async deactivateUser(id) {
-        const [result] = await mysqlPool.query(`
-            UPDATE Usuarios
-            SET Activo = FALSE
-            WHERE Id_Usuario = ?
-        `, [id]);
+    static async actualizar(
+        idUsuario,
+        nombre,
+        apellidoPaterno,
+        apellidoMaterno,
+        usuario,
+        idRol
+    ) {
+        const [resultado] = await mysqlPool.query(`
+        UPDATE Usuarios
+        SET
+            Nombre = ?,
+            Apellido_Paterno = ?,
+            Apellido_Materno = ?,
+            Usuario = ?,
+            Id_Rol = ?
+        WHERE Id_Usuario = ?
+    `, [
+            nombre,
+            apellidoPaterno,
+            apellidoMaterno,
+            usuario,
+            idRol,
+            idUsuario
+        ]);
 
-        return result;
+        return resultado.affectedRows;
     }
 
-    static async activateUser(id) {
-        const [result] = await mysqlPool.query(`
-            UPDATE Usuarios
-            SET Activo = TRUE
-            WHERE Id_Usuario = ?
-        `, [id]);
+    static async actualizarConPassword(
+        idUsuario,
+        nombre,
+        apellidoPaterno,
+        apellidoMaterno,
+        usuario,
+        password,
+        idRol
+    ) {
+        const [resultado] = await mysqlPool.query(`
+        UPDATE Usuarios
+        SET
+            Nombre = ?,
+            Apellido_Paterno = ?,
+            Apellido_Materno = ?,
+            Usuario = ?,
+            Password = ?,
+            Id_Rol = ?
+        WHERE Id_Usuario = ?
+    `, [
+            nombre,
+            apellidoPaterno,
+            apellidoMaterno,
+            usuario,
+            password,
+            idRol,
+            idUsuario
+        ]);
 
-        return result;
+        return resultado.affectedRows;
     }
 
-    static async findByUsername(usuario) {
-        const [rows] = await mysqlPool.query(`
-            SELECT
-                u.Id_Usuario,
-                u.Nombre,
-                u.Apellido_Paterno,
-                u.Apellido_Materno,
-                u.Usuario,
-                u.Password,
-                u.Id_Rol,
-                r.Nombre AS Rol,
-                u.Activo
-            FROM Usuarios u
-            INNER JOIN Roles r
-                ON r.Id_Rol = u.Id_Rol
-            WHERE u.Usuario = ?
-            LIMIT 1
-        `, [usuario]);
+    static async actualizarPassword(
+        idUsuario,
+        password
+    ) {
+        const [resultado] = await mysqlPool.query(`
+        UPDATE Usuarios
+        SET Password = ?
+        WHERE Id_Usuario = ?
+    `, [
+            password,
+            idUsuario
+        ]);
 
-        return rows;
+        return resultado.affectedRows;
     }
 
-    static async existsUsername(usuario) {
-        const [rows] = await mysqlPool.query(`
-            SELECT Id_Usuario
-            FROM Usuarios
-            WHERE Usuario = ?
-            LIMIT 1
-        `, [usuario]);
+    static async cambiarEstado(
+        idUsuario,
+        activo
+    ) {
+        const [resultado] = await mysqlPool.query(`
+        UPDATE Usuarios
+        SET Activo = ?
+        WHERE Id_Usuario = ?
+    `, [
+            activo,
+            idUsuario
+        ]);
 
-        return rows.length > 0;
+        return resultado.affectedRows;
+    }
+
+    static async buscarPorUsuario(usuario) {
+        const [resultado] = await mysqlPool.query(`
+        SELECT
+            u.Id_Usuario,
+            u.Nombre,
+            u.Apellido_Paterno,
+            u.Apellido_Materno,
+            u.Usuario,
+            u.Password,
+            u.Id_Rol,
+            r.Nombre AS Rol,
+            u.Activo
+        FROM Usuarios u
+        INNER JOIN Roles r
+            ON r.Id_Rol = u.Id_Rol
+        WHERE u.Usuario = ?
+        LIMIT 1
+    `, [usuario]);
+
+        return resultado[0];
+    }
+
+    static async buscarPorId(idUsuario) {
+        const [resultado] = await mysqlPool.query(`
+        SELECT
+            u.Id_Usuario,
+            u.Nombre,
+            u.Apellido_Paterno,
+            u.Apellido_Materno,
+            u.Usuario,
+            u.Password,
+            u.Id_Rol,
+            r.Nombre AS Rol,
+            u.Activo
+        FROM Usuarios u
+        INNER JOIN Roles r
+            ON r.Id_Rol = u.Id_Rol
+        WHERE u.Id_Usuario = ?
+        LIMIT 1
+    `, [idUsuario]);
+
+        return resultado[0];
+    }
+
+    static async existeUsuario(usuario) {
+        const [resultado] = await mysqlPool.query(`
+        SELECT Id_Usuario
+        FROM Usuarios
+        WHERE Usuario = ?
+        LIMIT 1
+    `, [usuario]);
+
+        return resultado.length > 0;
+    }
+
+    static async existeUsuarioOtroId(
+        usuario,
+        idUsuario
+    ) {
+        const [resultado] = await mysqlPool.query(`
+        SELECT Id_Usuario
+        FROM Usuarios
+        WHERE Usuario = ?
+          AND Id_Usuario <> ?
+        LIMIT 1
+    `, [
+            usuario,
+            idUsuario
+        ]);
+
+        return resultado.length > 0;
+    }
+
+    static async obtenerPorUsuarioParaReset(usuario) {
+        const [resultado] = await mysqlPool.query(`
+        SELECT
+            Id_Usuario,
+            Usuario,
+            Activo
+        FROM Usuarios
+        WHERE Usuario = ?
+        LIMIT 1
+    `, [usuario]);
+
+        return resultado[0];
     }
 }
 
-module.exports = Usuarios;
+module.exports = UsuariosModel;

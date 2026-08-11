@@ -11,12 +11,6 @@ router.get(
 );
 
 router.get(
-    '/:id',
-    verificarToken,
-    AdeudosController.obtenerPorId
-);
-
-router.get(
     '/prestamo/:idPrestamo',
     verificarToken,
     AdeudosController.obtenerPorPrestamo
@@ -26,6 +20,12 @@ router.get(
     '/alumno/:idAlumno/pendientes',
     verificarToken,
     AdeudosController.obtenerPendientesPorAlumno
+);
+
+router.get(
+    '/:id',
+    verificarToken,
+    AdeudosController.obtenerPorId
 );
 
 router.post(

@@ -1,7 +1,6 @@
 const LibrosService = require('../services/libros.service');
 
 class LibrosController {
-
     static async listar(req, res) {
         try {
             const resultado = await LibrosService.listar();
@@ -170,20 +169,22 @@ class LibrosController {
         }
     }
 
-    static async eliminar(req, res) {
+    static async cambiarEstado(req, res) {
         const { id } = req.params;
+        const { Activo } = req.body;
         const idUsuario = req.usuario.Id_Usuario;
 
         try {
             const resultado =
-                await LibrosService.eliminar(
+                await LibrosService.cambiarEstado(
                     id,
+                    Activo,
                     idUsuario
                 );
 
             res.json({
                 success: true,
-                mensaje: 'Libro eliminado correctamente',
+                mensaje: 'Estado del libro actualizado correctamente',
                 data: resultado
             });
 
@@ -194,6 +195,7 @@ class LibrosController {
             });
         }
     }
+
 }
 
 module.exports = LibrosController;

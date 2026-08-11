@@ -1,194 +1,204 @@
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
-const Usuarios = require('../models/usuarios.model');
+const UsuariosService = require('../services/usuarios.service');
+class UsuariosController {
+    static async listar(req, res) {
+        try {
+            const resultado = await UsuariosService.listar();
 
-class UsuarioController {
-    static async all(req, res) {
-        try {
-            const result = await Usuario.all();
-            res.json(result);
+            res.json({
+                success: true,
+                data: resultado
+            });
+
         } catch (error) {
-            res.status(500).json
-                (
-                    {
-                        mensaje: "Error al obtener usuarios",
-                        error: error.message
-                    }
-                )
+            res.status(500).json({
+                success: false,
+                mensaje: 'Error al obtener usuarios',
+                error: error.message
+            });
         }
     }
-    static async userbyId(req, res) {
+
+    static async obtenerPorId(req, res) {
         const { id } = req.params;
+
         try {
-            const result = await Usuario.userbyId(id);
-            res.json(result);
+            const resultado =
+                await UsuariosService.obtenerPorId(id);
+
+            res.json({
+                success: true,
+                data: resultado
+            });
+
         } catch (error) {
-            res.status(500).json(
-                {
-                    mensaje: "Error al obtener usuarios",
-                    error: error.message
-                }
-            )
+            res.status(404).json({
+                success: false,
+                mensaje: error.message
+            });
         }
     }
-    static async checkUser(req, res) {
+
+    static async resumen(req, res) {
+        try {
+            const resultado =
+                await UsuariosService.resumen();
+
+            res.json({
+                success: true,
+                data: resultado
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                mensaje: 'Error al obtener resumen de usuarios',
+                error: error.message
+            });
+        }
+    }
+
+    static async verificarUsuario(req, res) {
         const { email } = req.body;
 
         try {
-            const resultado = await Usuario.checkUser(email);
+            const resultado =
+                await UsuariosService.verificarUsuario(email);
 
-            if (resultado.success) {
-                res.json({
-                    success: true,
-                    data: resultado.user,
-                });
-            } else {
-                res.status(401).json({
-                    success: false,
-                    message: "El usuario no está registrado."
-                });
-            }
+            res.json({
+                success: true,
+                data: resultado
+            });
 
         } catch (error) {
-            res.status(500).json({
+            res.status(400).json({
                 success: false,
-                message: "Error en el servidor",
-                error: error.message
+                mensaje: error.message
             });
         }
     }
-    static async resetPassword(req, res) {
+
+    static async restablecerPassword(req, res) {
         const { email, newPassword } = req.body;
-        try {
-            const passwordEncrypted = await bcrypt.genSalt(10);
-            const passwordHash = await bcrypt.hash(newPassword, passwordEncrypted);
-
-            const resultado = await Usuario.resetPassword(email, passwordHash);
-
-            if (resultado.success) {
-                res.json({
-                    success: true,
-                    message: "Contraseña actualizada correctamente."
-                });
-            } else {
-                res.status(401).json({
-                    success: false,
-                    message: "No se pudo actualizar la contraseña."
-                });
-            }
-
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                message: "Error en el servidor",
-                error: error.message
-            });
-        }
-    }
-    static async usersResume(req, res) {
-        try {
-            const result = await Usuario.usersResume();
-            res.json(result);
-        } catch (error) {
-            res.status(500).json
-                (
-                    {
-                        mensaje: "Error al obtener usuarios",
-                        error: error.message
-                    }
-                )
-        }
-    }
-
-    static async createUser(req, res) {
-        const data = req.body;
 
         try {
-            const salt = await bcrypt.genSalt(10);
-            const hash = await bcrypt.hash(data.Contrasena, salt);
-
-            data.Contrasena = hash;
-
-            const result = await Usuario.createUser(data);
+            await UsuariosService.restablecerPassword(
+                email,
+                newPassword
+            );
 
             res.json({
                 success: true,
-                data: result
+                mensaje: 'Contraseña actualizada correctamente'
             });
 
         } catch (error) {
-            res.status(500).json({
+            res.status(400).json({
                 success: false,
-                mensaje: "Error al crear usuario",
-                error: error.message
+                mensaje: error.message
             });
         }
     }
-    static async updateUser(req, res) {
-        const { id } = req.params;
+
+    static async crear(req, res) {
         const data = req.body;
+        const idUsuario =
+            req.usuario?.Id_Usuario;
 
         try {
-
-            if (data.Contrasena) {
-                const salt = await bcrypt.genSalt(10);
-                data.Contrasena = await bcrypt.hash(data.Contrasena, salt);
-            }
-
-            const result = await Usuario.updateUser(id, data);
-
-            res.json({
-                success: true,
-                data: result
-            });
-
-        } catch (error) {
-            res.status(500).json({
-                success: false,
-                mensaje: "Error al actualizar usuario",
-                error: error.message
-            });
-        }
-    }
-    static async deleteUser(req, res) {
-        const { id } = req.params;
-        try {
-            const result = await Usuario.deleteUser(id);
-            res.json(result);
-        } catch (error) {
-            res.status(500).json
-                (
-                    {
-                        mensaje: "Error al eliminar usuario",
-                        error: error.message
-                    }
-                )
-        }
-    }
-    static async generatePassword(req, res) {
-        try {
-            const chars =
-                'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!';
-            const length = 12;
-            let password = '';
-            for (let i = 0; i < length; i++) {
-                const randomIndex = Math.floor(
-                    Math.random() * chars.length
+            const resultado =
+                await UsuariosService.crear(
+                    data,
+                    idUsuario
                 );
-                password += chars[randomIndex];
-            }
-            return res.json({
+
+            res.status(201).json({
                 success: true,
-                password: password
+                mensaje: 'Usuario creado correctamente',
+                data: resultado
             });
+
         } catch (error) {
-            console.error(error);
-            return res.status(500).json({
+            res.status(400).json({
                 success: false,
-                message: "Error al generar contraseña",
+                mensaje: error.message
+            });
+        }
+    }
+
+    static async actualizar(req, res) {
+        const { id } = req.params;
+        const data = req.body;
+        const idUsuario =
+            req.usuario?.Id_Usuario;
+
+        try {
+            const resultado =
+                await UsuariosService.actualizar(
+                    id,
+                    data,
+                    idUsuario
+                );
+
+            res.json({
+                success: true,
+                mensaje: 'Usuario actualizado correctamente',
+                data: resultado
+            });
+
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                mensaje: error.message
+            });
+        }
+    }
+
+    static async cambiarEstado(req, res) {
+        const { id } = req.params;
+        const { Activo } = req.body;
+        const idUsuario =
+            req.usuario?.Id_Usuario;
+
+        try {
+            const resultado =
+                await UsuariosService.cambiarEstado(
+                    id,
+                    Activo,
+                    idUsuario
+                );
+
+            res.json({
+                success: true,
+                mensaje: 'Estado del usuario actualizado correctamente',
+                data: resultado
+            });
+
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                mensaje: error.message
+            });
+        }
+    }
+
+    static async generarPassword(req, res) {
+        try {
+            const password =
+                UsuariosService.generarPassword();
+
+            res.json({
+                success: true,
+                password
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                mensaje: 'Error al generar contraseña',
                 error: error.message
             });
         }
     }
 }
-module.exports = UsuarioController;
+
+module.exports = UsuariosController;

@@ -1,16 +1,21 @@
 const AlumnosModel = require('../models/alumnos.model');
 const LibrosModel = require('../models/libros.model');
 const PrestamosModel = require('../models/prestamos.model');
+const AdeudosModel = require('../models/adeudos.model');
 const BitacoraModel = require('../models/bitacora.model');
 
 class PrestamosService {
-
     static async listar() {
         return await PrestamosModel.listar();
     }
 
     static async obtenerPorId(idPrestamo) {
-        const prestamo = await PrestamosModel.obtenerPorId(idPrestamo);
+        if (!idPrestamo) {
+            throw new Error('El préstamo es obligatorio');
+        }
+
+        const prestamo =
+            await PrestamosModel.obtenerPorId(idPrestamo);
 
         if (!prestamo) {
             throw new Error('El préstamo no existe');
@@ -20,7 +25,12 @@ class PrestamosService {
     }
 
     static async obtenerPorAlumno(idAlumno) {
-        const alumno = await AlumnosModel.obtenerPorId(idAlumno);
+        if (!idAlumno) {
+            throw new Error('El alumno es obligatorio');
+        }
+
+        const alumno =
+            await AlumnosModel.obtenerPorId(idAlumno);
 
         if (!alumno) {
             throw new Error('El alumno no existe');
@@ -30,13 +40,20 @@ class PrestamosService {
     }
 
     static async obtenerActivosPorAlumno(idAlumno) {
-        const alumno = await AlumnosModel.obtenerPorId(idAlumno);
+        if (!idAlumno) {
+            throw new Error('El alumno es obligatorio');
+        }
+
+        const alumno =
+            await AlumnosModel.obtenerPorId(idAlumno);
 
         if (!alumno) {
             throw new Error('El alumno no existe');
         }
 
-        return await PrestamosModel.obtenerActivosPorAlumno(idAlumno);
+        return await PrestamosModel.obtenerActivosPorAlumno(
+            idAlumno
+        );
     }
 
     static async obtenerVencidos() {
@@ -46,6 +63,7 @@ class PrestamosService {
     }
 
     static async crear(data, idUsuario) {
+
         const {
             Id_Alumno,
             Id_Libro,
@@ -62,18 +80,25 @@ class PrestamosService {
         }
 
         if (!Fecha_Prestamo) {
-            throw new Error('La fecha de préstamo es obligatoria');
+            throw new Error(
+                'La fecha de préstamo es obligatoria'
+            );
         }
 
         if (!Fecha_Vencimiento) {
-            throw new Error('La fecha de vencimiento es obligatoria');
+            throw new Error(
+                'La fecha de vencimiento es obligatoria'
+            );
         }
 
         if (!idUsuario) {
-            throw new Error('El usuario que registra el préstamo es obligatorio');
+            throw new Error(
+                'El usuario que registra el préstamo es obligatorio'
+            );
         }
 
-        const alumno = await AlumnosModel.obtenerPorId(Id_Alumno);
+        const alumno =
+            await AlumnosModel.obtenerPorId(Id_Alumno);
 
         if (!alumno) {
             throw new Error('El alumno no existe');
@@ -83,13 +108,34 @@ class PrestamosService {
             throw new Error('El alumno está inactivo');
         }
 
-        const libro = await LibrosModel.obtenerPorId(Id_Libro);
+        /*
+         * Un alumno con adeudos pendientes
+         * no puede solicitar otro préstamo.
+         */
+        const adeudos =
+            await AdeudosModel.obtenerPendientesPorAlumno(
+                Id_Alumno
+            );
+
+        if (adeudos.length > 0) {
+            throw new Error(
+                'El alumno tiene adeudos pendientes y no puede solicitar préstamos'
+            );
+        }
+
+        const libro =
+            await LibrosModel.obtenerPorId(Id_Libro);
 
         if (!libro) {
             throw new Error('El libro no existe');
         }
 
-        const disponible = await LibrosModel.verificarDisponible(Id_Libro);
+        if (!libro.Activo) {
+            throw new Error('El libro está inactivo');
+        }
+
+        const disponible =
+            await LibrosModel.verificarDisponible(Id_Libro);
 
         if (!disponible) {
             throw new Error('El libro no está disponible');
@@ -116,13 +162,14 @@ class PrestamosService {
             );
         }
 
-        const idPrestamo = await PrestamosModel.crear(
-            Id_Alumno,
-            Id_Libro,
-            idUsuario,
-            Fecha_Prestamo,
-            Fecha_Vencimiento
-        );
+        const idPrestamo =
+            await PrestamosModel.crear(
+                Id_Alumno,
+                Id_Libro,
+                idUsuario,
+                Fecha_Prestamo,
+                Fecha_Vencimiento
+            );
 
         await BitacoraModel.log({
             Id_Usuario: idUsuario,
@@ -130,20 +177,26 @@ class PrestamosService {
             Tabla_Afectada: 'Prestamos',
             Id_Registro: idPrestamo,
             Descripcion:
-                `Préstamo creado para el alumno ${alumno.Numero_Control} ` +
+                `Préstamo creado para el alumno ` +
+                `${alumno.Numero_Control} ` +
                 `del libro "${libro.Titulo}"`
         });
 
-        return await PrestamosModel.obtenerPorId(idPrestamo);
+        return await PrestamosModel.obtenerPorId(
+            idPrestamo
+        );
     }
 
     static async devolver(idPrestamo, idUsuario) {
+
         if (!idPrestamo) {
             throw new Error('El préstamo es obligatorio');
         }
 
         if (!idUsuario) {
-            throw new Error('El usuario que registra la devolución es obligatorio');
+            throw new Error(
+                'El usuario que registra la devolución es obligatorio'
+            );
         }
 
         const prestamo =
@@ -154,14 +207,18 @@ class PrestamosService {
         }
 
         if (prestamo.Estado === 'DEVUELTO') {
-            throw new Error('El préstamo ya fue devuelto');
+            throw new Error(
+                'El préstamo ya fue devuelto'
+            );
         }
 
         const resultado =
             await PrestamosModel.devolver(idPrestamo);
 
         if (!resultado) {
-            throw new Error('No fue posible registrar la devolución');
+            throw new Error(
+                'No fue posible registrar la devolución'
+            );
         }
 
         await BitacoraModel.log({
@@ -170,11 +227,14 @@ class PrestamosService {
             Tabla_Afectada: 'Prestamos',
             Id_Registro: idPrestamo,
             Descripcion:
-                `Devolución registrada del libro "${prestamo.Titulo}" ` +
+                `Devolución registrada del libro ` +
+                `"${prestamo.Titulo}" ` +
                 `del alumno ${prestamo.Numero_Control}`
         });
 
-        return await PrestamosModel.obtenerPorId(idPrestamo);
+        return await PrestamosModel.obtenerPorId(
+            idPrestamo
+        );
     }
 
     static async actualizarVencidos() {
