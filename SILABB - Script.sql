@@ -208,3 +208,9 @@ CREATE INDEX IDX_Bitacora_Fecha
 INSERT INTO Roles (Nombre) VALUES
 ('ADMINISTRADOR'),
 ('BIBLIOTECARIO');
+
+ALTER TABLE Alumnos
+ADD COLUMN Apellido_Paterno VARCHAR(100) NOT NULL AFTER Nombre,
+ADD COLUMN Apellido_Materno VARCHAR(100) AFTER Apellido_Paterno;
+
+SELECT * FROM Alumnos
