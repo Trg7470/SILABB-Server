@@ -323,6 +323,61 @@ VALUES
     );
     
     
-    ALTER TABLE Libros
+ALTER TABLE Libros
 ADD COLUMN Activo BOOLEAN NOT NULL DEFAULT TRUE;
     
+(6, 'LIBRO_PERDIDO',
+ 'El alumno reportó que perdió el libro durante el periodo de préstamo.',
+ 'PENDIENTE', 3);
+
+-- Adeudo por libro dañado
+INSERT INTO Adeudos
+(Id_Prestamo, Tipo, Descripcion, Estado, Id_Usuario_Creacion)
+VALUES
+(4, 'LIBRO_DANADO',
+ 'El libro fue devuelto con daños en la portada.',
+ 'RESUELTO', 2);
+
+-- Adeudo resuelto
+INSERT INTO Adeudos
+(Id_Prestamo, Tipo, Descripcion, Estado,
+ Fecha_Resolucion, Id_Usuario_Creacion, Id_Usuario_Resolucion)
+VALUES
+(5, 'OTRO',
+ 'El alumno presentó una incidencia durante la devolución.',
+ 'RESUELTO',
+ '2026-08-02 10:00:00', 3, 2);
+
+
+-- =========================================================
+-- DATOS DE PRUEBA: BITACORA
+-- =========================================================
+
+INSERT INTO Bitacora
+(Id_Usuario, Accion, Tabla_Afectada, Id_Registro, Descripcion)
+VALUES
+(1, 'INSERTAR', 'Usuarios', 2,
+ 'Se registró un nuevo bibliotecario.'),
+
+(2, 'INSERTAR', 'Prestamos', 1,
+ 'Se registró préstamo del libro Clean Code al alumno Juan Pérez.'),
+
+(2, 'INSERTAR', 'Prestamos', 2,
+ 'Se registró préstamo del libro Bases de datos al alumno Luis Martínez.'),
+
+(3, 'INSERTAR', 'Prestamos', 3,
+ 'Se registró préstamo del libro Redes de computadoras al alumno Sofía García.'),
+
+(2, 'DEVOLVER', 'Prestamos', 4,
+ 'Se registró devolución de Cien años de soledad.'),
+
+(2, 'INSERTAR', 'Adeudos', 1,
+ 'Se generó adeudo por libro no devuelto.'),
+
+(3, 'INSERTAR', 'Adeudos', 2,
+ 'Se generó adeudo por libro perdido.'),
+
+(2, 'RESOLVER', 'Adeudos', 3,
+ 'Se resolvió adeudo por libro dañado.');
+ 
+ SELECT COUNT(*) FROM Alumnos;
