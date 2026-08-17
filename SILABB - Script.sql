@@ -389,3 +389,5 @@ VALUES
 
 (2, 'RESOLVER', 'Adeudos', 3,
  'Se resolvió adeudo por libro dañado.');
+ 
+ SELECT COUNT(*) FROM Alumnos;
